@@ -17,7 +17,7 @@ public class Main {
         System.out.println("Matriz de distancias generada.");
 
         // Resolver usando el algoritmo probabilístico del vecino más cercano
-        Method1 method = new Method1(12345L, 2.0); // Semilla fija y alpha=2.5
+        Method1 method = new Method1(12345L, 6.0); // Semilla fija y alpha=2.5
 
         System.out.println("\n" + "=".repeat(60));
         System.out.println("COMPARACIÓN DE ALGORITMOS");
@@ -26,21 +26,12 @@ public class Main {
         // ===== MÉTODO 1: Algoritmo tradicional (mínimos vehículos) =====
         long startTime1 = System.currentTimeMillis();
         System.out.println("\n[MÉTODO 1] Ejecutando algoritmo probabilístico (mínimos vehículos)...");
-        List<List<Point>> routesMinimal = method.probabilisticNearestNeighbor(points, start, matrix, 100000);
+        List<List<Point>> routesMinimal = method.probabilisticNearestNeighbor(points, start, matrix, 150000);
 
         System.out.println("Aplicando mejora local 2-opt...");
         routesMinimal = method.improve2Opt(routesMinimal, matrix, points);
         long endTime1 = System.currentTimeMillis();
-
-        // ===== MÉTODO 2: Algoritmo usando todos los vehículos =====
-        long startTime2 = System.currentTimeMillis();
-        System.out.println("\n[MÉTODO 2] Ejecutando algoritmo con todos los vehículos...");
-        Method2 method2 = new Method2(12345L, 2.0); // Semilla fija y alpha=2.5
-        List<List<Point>> routesAllVehicles = method2.probabilisticAllVehicles(points, start, matrix, 100000);
-
-        System.out.println("Aplicando mejora local 2-opt..."); 
-        routesAllVehicles = method.improve2Opt(routesAllVehicles, matrix, points);
-        long endTime2 = System.currentTimeMillis();
+        System.out.println("Tiempo de ejecución: " + (endTime1 - startTime1) + " ms");
 
         // ===== COMPARAR RESULTADOS =====
         System.out.println("\n" + "=".repeat(60));
@@ -56,33 +47,7 @@ public class Main {
         System.out.println("Tiempo de ejecución: " + (endTime1 - startTime1) + " ms");
         double totalDistance1 = showRouteStatistics(routesMinimal, matrix, points, "MÉTODO 1");
 
-        // Método 2 - Todos los vehículos
-        System.out.println("\n MÉTODO 2 - TODOS LOS VEHÍCULOS:");
-        int nonEmptyRoutes = 0;
-        for (List<Point> route : routesAllVehicles) {
-            if (!route.isEmpty()) nonEmptyRoutes++;
-        }
-        System.out.println("Rutas con clientes: " + nonEmptyRoutes + "/20");
-        int totalClients2 = printRoutesSummary(routesAllVehicles);
-        System.out.println("Total de clientes atendidos: " + totalClients2);
-        System.out.println("Vehículos disponibles: 20/20");
-        System.out.println("Tiempo de ejecución: " + (endTime2 - startTime2) + " ms");
-        double totalDistance2 = showRouteStatistics(routesAllVehicles, matrix, points, "MÉTODO 2");
 
-        // ===== RECOMENDACIÓN =====
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("ANÁLISIS Y RECOMENDACIÓN");
-        System.out.println("=".repeat(60));
-
-        double improvement = ((totalDistance1 - totalDistance2) / totalDistance1) * 100;
-
-        if (totalDistance2 < totalDistance1) {
-            System.out.printf("✅ MÉTODO 2 es MEJOR: %.2f%% de mejora en distancia total%n", improvement);
-            System.out.println("   Ventajas: Mejor distribución de carga, menores distancias individuales");
-        } else {
-            System.out.printf("✅ MÉTODO 1 es MEJOR: %.2f%% menor distancia total%n", -improvement);
-            System.out.println("   Ventajas: Menor número de vehículos, más eficiente en recursos");
-        }
 
     }
 
