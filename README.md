@@ -52,7 +52,7 @@ Como pudimos ver en las desventajas del NNA, este no hace una solución  óptima
 **Tarea 1:** Cada uno deberá pensar en al menos 1 método que nos sirva para intentar volver más optima la solución (se puede partir del NNA), considerando todo lo visto en clase.
 **Tarea 2:** Hacer el pseudo código de la implementación y explicar porqué el método mejoraría la optimización de la solución.
 **Tarea 3:** Enviar por el grupo el (los) método(s) para discutir al respecto.
-
+ 
 ### Documentación del proyecto en LaTex
 Debemos hacer toda la presentación del proyecto de investigación en inglés y usando latex.
 ## Tenemos 2 semanas para terminar el proyecto.
