@@ -77,5 +77,32 @@ public class PathPanel extends JPanel {
                 g.setColor(colors[i % colors.length]);
             }
         }
+
+        // Legend dimensions and position (top right corner)
+        int boxSize = 16;
+        int vehiclesPerColumn = 15; // Adjust for your window size
+        int columnWidth = 120;
+        g.setFont(new Font("Arial", Font.PLAIN, 14));
+        int legendHeight = Math.min(routes.size(), vehiclesPerColumn) * (boxSize + 6) + 10;
+        int legendWidth = ((routes.size() - 1) / vehiclesPerColumn + 1) * columnWidth;
+        int legendX = getWidth() - legendWidth - padding;
+        int legendY = padding;
+
+        // Optional: Draw background for legend
+        g.setColor(new Color(255, 255, 255, 220));
+        g.fillRect(legendX - 8, legendY - 8, legendWidth, legendHeight);
+
+        for (int i = 0; i < routes.size(); i++) {
+            int col = i / vehiclesPerColumn;
+            int row = i % vehiclesPerColumn;
+            int x = legendX + col * columnWidth;
+            int y = legendY + row * (boxSize + 6);
+
+            g.setColor(colors[i % colors.length]);
+            g.fillRect(x, y, boxSize, boxSize);
+            g.setColor(Color.BLACK);
+            g.drawRect(x, y, boxSize, boxSize);
+            g.drawString("Vehículo " + (i + 1), x + boxSize + 8, y + boxSize - 3);
+        }
     }
 }
