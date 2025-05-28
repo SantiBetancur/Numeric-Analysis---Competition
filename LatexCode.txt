@@ -1,0 +1,94 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\geometry{margin=3cm}
+
+\begin{document}
+
+% ----------- Page 1: Cover -----------
+\begin{titlepage}
+    \centering
+
+    \Huge\textbf{Practice}\\
+    \LARGE Vehicle Routing Problem\\[3cm]
+
+    \Large
+    \textbf{Team:}\\[0.5cm]
+    Santiago Betancur\\
+    Yasir Blandón Varela\\
+    Daniel Felipe Arango\\[3cm]
+
+    \textbf{Academic Instructor:}\\[0.5cm]
+    Alejandro Arenas Vasco\\[3cm]
+
+    EAFIT\\
+    Department of Computer Science and Systems\\
+    Numerical Analysis\\[3cm]
+
+    Medellín - Antioquia\\
+    May 29, 2025
+
+    \vfill
+\end{titlepage}
+
+% ----------- Page 2: Algorithm Description -----------
+\newpage
+
+\section*{Algorithm Description}
+
+The implemented algorithm is a version of the nearest neighbor approach. For this project, a probabilistic strategy was used to solve the vehicle routing problem with limited vehicle capacity. Its goal is to construct routes from a depot to multiple clients, minimizing the total traveled distance while allowing some randomness in the node selection to explore different solutions.\\
+
+Each route starts at the depot and attempts to add customers whose demand does not exceed the vehicle capacity, which is 12 customers. Unlike the classical method, this algorithm selects the next customer based on a probability inversely proportional to the distance—favoring closer nodes, but not strictly.\\
+
+This approach allows better exploration of the solution space and can avoid poor local solutions that are common in fully deterministic methods.\\
+
+
+
+% ----------- Page 3: Algorithm Pseudocode -----------
+\newpage
+
+\section*{Algorithm Pseudocode}
+
+\begin{algorithm}[H]
+\caption{Route Construction using Probabilistic Nearest Neighbor}
+\KwIn{\\
+\hspace{2mm} $D$: distance matrix between points\\
+\hspace{2mm} $clients$: set of nodes to visit (excluding the depot)\\
+\hspace{2mm} $Q$: maximum vehicle capacity\\
+\hspace{2mm} $demands$: demand array for each client}
+\KwOut{List of routes, each containing a subset of clients}
+
+$routes \leftarrow$ empty list\;
+$unvisited \leftarrow$ copy of $clients$\;
+
+\While{$unvisited$ is not empty}{
+    $route \leftarrow$ empty list\;
+    $load \leftarrow 0$\;
+    $current \leftarrow 0$ \tcp*[f]{starts at the depot}
+
+    \While{there exists client $c$ in $unvisited$ such that $load + demands[c] \leq Q$}{
+        $neighbors \leftarrow$ feasible clients from $current$\;
+        Compute probabilities $\propto \frac{1}{distance(current, c)}$ for each $c$ in $neighbors$\;
+        $next \leftarrow$ randomly chosen client based on probabilities\;
+
+        Add $next$ to $route$\;
+        $load \leftarrow load + demands[next]$\;
+        Remove $next$ from $unvisited$\;
+        $current \leftarrow next$\;
+    }
+
+    Insert depot at the beginning of $route$\;
+    Insert depot at the end of $route$\;
+    Add $route$ to $routes$\;
+}
+
+\Return $routes$\;
+\end{algorithm}
+
+\end{document}
