@@ -1,11 +1,14 @@
 package JavaImplementation;
 import java.util.List;
+import javax.swing.JFrame;
 
 
 public class Main {
     public static void main(String[] args) {
         // Leer las coordenadas del archivo
-        List<Point> points = Reader.readCoord("JavaImplementation/../VRP_example/Coord.txt"); 
+        List<Point> points = Reader.readCoord("JavaImplementation/../VRP_example/Coord.txt");
+
+        
 
         System.out.println("Número de puntos: " + (points.size() - 1)); // Excluir el punto depósito
         Point start = points.get(0); // Depósito, donde comienza el recorrido
@@ -32,6 +35,15 @@ public class Main {
         System.out.println("Tiempo de ejecución: " + (endTime1 - startTime1) + " ms");
         printRoutes(routesMinimal);
 
+        // Show graphical routes
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Rutas de Vehículos");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.add(new PathPanel(routesMinimal));
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
     }
 
     // Imprimir las rutas de cáda vehículo

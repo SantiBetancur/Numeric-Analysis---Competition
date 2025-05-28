@@ -11,12 +11,14 @@ public class Reader {
         List<Point> points = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
+            Integer id = 0; // Initialize ID for points
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split("\\s+");
                 if (parts.length == 2) {
                     double x = Double.parseDouble(parts[0].trim());
                     double y = Double.parseDouble(parts[1].trim());
-                    points.add(new Point(x, y));
+                    points.add(new Point(x, y,id));
+                    id++;
                 }
             }
         } catch (IOException e) {

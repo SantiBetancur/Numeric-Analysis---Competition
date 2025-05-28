@@ -4,10 +4,12 @@ public class Point {
      // Point class to represent (x, y) coordinates
    
         public double x, y;
+        public Integer id;
 
-        public Point(double x, double y) {
+        public Point(double x, double y, Integer id) {
             this.x = x;
             this.y = y;
+            this.id = id;
         }
 
         public double distance(Point otherPoint) {
@@ -18,7 +20,7 @@ public class Point {
 
         @Override
         public String toString() {
-            return "(" + x + ", " + y + ")";
+            return id.toString();
         }
     
 }
