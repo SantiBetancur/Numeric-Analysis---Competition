@@ -26,7 +26,7 @@ public class Method1 {
      * @return Lista de rutas optimizadas
      */
     public List<List<Point>> probabilisticNearestNeighbor(List<Point> points, Point startPoint, 
-                                                         double[][] distanceMatrix, int iterations) {
+                                                         double[][] distanceMatrix, int iterations, double[][] matrix) {
         List<List<Point>> bestRoutes = null;
         double bestTotalDistance = Double.MAX_VALUE;
         
@@ -45,6 +45,8 @@ public class Method1 {
         }
         
         System.out.println("Mejor distancia total encontrada: " + bestTotalDistance);
+        System.out.println("Aplicando mejora local 2-opt...");
+        bestRoutes = improve2Opt(bestRoutes, matrix, points);
         return bestRoutes;
     }
     
@@ -55,37 +57,36 @@ public class Method1 {
         List<List<Point>> routes = new ArrayList<>();
         boolean[] visited = new boolean[points.size()];
         visited[0] = true; // Marcar el depósito como visitado
-        
+
         int remainingClients = 199; // Total de clientes (excluyendo depósito)
-        
+
         while (remainingClients > 0) {
             List<Point> route = new ArrayList<>();
             int currentClient = 0; // Comenzar desde el depósito
             int servedClients = 0;
-            
+
             // Construir una ruta para un vehículo
             while (servedClients < 12 && remainingClients > 0) {
                 int nextClient = selectNextClientProbabilistically(currentClient, visited, distanceMatrix);
-                
+
                 if (nextClient == -1) {
                     break; // No hay más clientes disponibles
                 }
-                
+
                 route.add(points.get(nextClient));
                 visited[nextClient] = true;
                 currentClient = nextClient;
                 servedClients++;
                 remainingClients--;
             }
-            
             if (!route.isEmpty()) {
                 routes.add(route);
             }
         }
-        
+
         return routes;
     }
-    
+
     /**
      * Selecciona el próximo cliente usando probabilidades basadas en distancias inversas
      */
@@ -93,7 +94,7 @@ public class Method1 {
         List<Integer> candidates = new ArrayList<>();
         List<Double> probabilities = new ArrayList<>();
         double totalInverseProbability = 0.0;
-        
+
         // Encontrar candidatos y calcular probabilidades
         for (int i = 1; i < distanceMatrix.length; i++) {
             if (!visited[i]) {
@@ -104,20 +105,20 @@ public class Method1 {
                 totalInverseProbability += inverseProbability;
             }
         }
-        
+
         if (candidates.isEmpty()) {
             return -1;
         }
-        
+
         // Normalizar probabilidades
         for (int i = 0; i < probabilities.size(); i++) {
             probabilities.set(i, probabilities.get(i) / totalInverseProbability);
         }
-        
+
         // Selección por ruleta
         return selectByRoulette(candidates, probabilities);
     }
-    
+
     /**
      * Selección por ruleta basada en probabilidades
      */
@@ -175,14 +176,14 @@ public class Method1 {
                 improvedRoutes.add(new ArrayList<>(route));
                 continue;
             }
-            
+
             List<Point> bestRoute = new ArrayList<>(route);
             boolean improved = true;
-            
+
             while (improved) {
                 improved = false;
                 double bestDistance = calculateRouteDistance(bestRoute, distanceMatrix, points);
-                
+
                 for (int i = 0; i < bestRoute.size() - 1; i++) {
                     for (int j = i + 2; j < bestRoute.size(); j++) {
                         List<Point> newRoute = perform2OptSwap(bestRoute, i, j);
@@ -226,24 +227,25 @@ public class Method1 {
     
     private double calculateRouteDistance(List<Point> route, double[][] distanceMatrix, List<Point> points) {
         if (route.isEmpty()) return 0.0;
-        
+
         double distance = 0.0;
-        
+
         // Distancia del depósito al primer cliente
         int firstIndex = points.indexOf(route.get(0));
         distance += distanceMatrix[0][firstIndex];
-        
-        // Distancias entre clientes consecutivos
+                // Distancias entre clientes consecutivos
         for (int i = 0; i < route.size() - 1; i++) {
             int currentIndex = points.indexOf(route.get(i));
             int nextIndex = points.indexOf(route.get(i + 1));
             distance += distanceMatrix[currentIndex][nextIndex];
         }
-        
+
         // Distancia del último cliente de vuelta al depósito
         int lastIndex = points.indexOf(route.get(route.size() - 1));
         distance += distanceMatrix[lastIndex][0];
-        
+
         return distance;
     }
+
+    
 }
