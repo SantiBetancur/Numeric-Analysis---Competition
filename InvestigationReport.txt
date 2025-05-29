@@ -1,0 +1,418 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{enumerate}
+\usepackage{hyperref}
+\geometry{margin=3cm}
+
+\begin{document}
+
+% ----------- Page 1: Cover -----------
+\begin{titlepage}
+    \centering
+
+    \Huge\textbf{Research Report}\\
+    \LARGE Hybrid Algorithm for Vehicle Routing Problem:\\
+    \Large Combining Probabilistic Construction and Intelligent Insertion\\[3cm]
+
+    \Large
+    \textbf{Team:}\\[0.5cm]
+    Santiago Betancur\\
+    Yasir Blandón Varela\\
+    Daniel Felipe Arango\\[2cm]
+
+    \textbf{Academic Instructor:}\\[0.5cm]
+    Alejandro Arenas Vasco\\[2cm]
+
+    EAFIT\\
+    Department of Computer Science and Systems\\
+    Numerical Analysis\\[2cm]
+
+    Medellín - Antioquia\\
+    May 28, 2025
+
+    \vfill
+\end{titlepage}
+
+% ----------- Page 2: Abstract and Introduction -----------
+\newpage
+
+\section*{Abstract}
+
+This report presents a comprehensive analysis of a hybrid algorithm designed to solve the Vehicle Routing Problem (VRP). The proposed approach combines probabilistic construction methods with intelligent insertion strategies, enhanced by local optimization techniques including 2-opt improvement and inter-route exchanges. The algorithm demonstrates a multi-phase approach that balances exploration and exploitation to achieve high-quality routing solutions while maintaining computational efficiency. Experimental results show significant improvements over traditional nearest neighbor approaches through the integration of multiple optimization strategies.
+
+\section{Introduction}
+
+The Vehicle Routing Problem (VRP) is a combinatorial optimization problem that seeks to determine optimal routes for a fleet of vehicles to serve a set of customers while minimizing total travel distance. This problem is NP-hard and has numerous real-world applications in logistics, supply chain management, and transportation planning.
+
+Our implementation addresses the Vehicle Routing Problem (VRP), where each vehicle has a limited capacity of 12 customers per route. The algorithm employs a hybrid approach that combines multiple strategies to achieve better solution quality than traditional single-method approaches.
+
+The main components to achieve this includa:
+\begin{itemize}
+    \item A hybrid construction algorithm combining probabilistic and intelligent insertion methods
+    \item Implementation of 2-opt local optimization for individual route improvement
+    \item Inter-route exchange mechanisms for global solution enhancement
+    \item Comprehensive analysis of the algorithm's performance characteristics
+\end{itemize}
+
+% ----------- Page 3: Algorithm Overview -----------
+\newpage
+
+\section{Algorithm Overview}
+
+The proposed hybrid algorithm consists of four main phases:
+
+\subsection{Phase 1: Hybrid Route Construction}
+The algorithm alternates between probabilistic construction and intelligent insertion methods during route building. This hybrid approach allows for both exploration of the solution space and exploitation of local optimization opportunities.
+
+\subsection{Phase 2: 2-Opt Local Optimization}
+Each constructed route undergoes 2-opt improvement to eliminate crossing edges and optimize the sequence of customers within individual routes.
+
+\subsection{Phase 3: Inter-Route Optimization}
+Multiple exchange strategies are applied between different routes, including 1-1, 2-1, 1-2, 1-0, and 0-1 exchanges to improve the global solution quality.
+
+\subsection{Phase 4: Iterative Improvement}
+The entire process is repeated multiple times, keeping track of the best solution found across all iterations.
+
+% ----------- Page 4: Hybrid Construction Algorithm -----------
+\newpage
+
+\section{Hybrid Construction Algorithm}
+
+The core innovation of our approach lies in the hybrid construction method that dynamically switches between two different construction strategies within a single route.
+
+\begin{algorithm}[H]
+\caption{Hybrid Route Construction Algorithm}
+\KwIn{\\
+\hspace{2mm} $D$: distance matrix between all points\\
+\hspace{2mm} $clients$: set of customer nodes\\
+\hspace{2mm} $capacity$: maximum customers per route (12)\\
+\hspace{2mm} $\alpha$: probability parameter for distance weighting}
+\KwOut{Set of routes covering all customers}
+
+$routes \leftarrow \emptyset$\;
+$visited \leftarrow$ boolean array initialized to false\;
+$visited[0] \leftarrow true$ \tcp*[r]{depot is always visited}
+$remainingClients \leftarrow |clients| - 1$\;
+
+\While{$remainingClients > 0$}{
+    $route \leftarrow \emptyset$\;
+    $servedClients \leftarrow 0$\;
+    $useProbabilistic \leftarrow$ random boolean\;
+    
+    \While{$servedClients < capacity$ \textbf{and} $remainingClients > 0$}{
+        $nextClient \leftarrow -1$\;
+        
+        \If{$useProbabilistic$ \textbf{and} $servedClients < 8$}{
+            $currentClient \leftarrow$ last client in route or depot\;
+            $nextClient \leftarrow$ selectNextClientProbabilistically($currentClient$, $visited$, $D$, $\alpha$)\;
+        }
+        \Else{
+            $nextClient \leftarrow$ selectBestInsertion($route$, $visited$, $D$)\;
+        }
+        
+        \If{$nextClient = -1$}{
+            \textbf{break}\;
+        }
+        
+        Add $clients[nextClient]$ to $route$\;
+        $visited[nextClient] \leftarrow true$\;
+        $servedClients \leftarrow servedClients + 1$\;
+        $remainingClients \leftarrow remainingClients - 1$\;
+    }
+    
+    \If{$route \neq \emptyset$}{
+        Add $route$ to $routes$\;
+    }
+}
+
+\Return $routes$\;
+\end{algorithm}
+
+% ----------- Page 5: Probabilistic Selection -----------
+\newpage
+
+\section{Probabilistic Client Selection}
+
+The probabilistic component uses a roulette wheel selection mechanism based on inverse distance probabilities.
+
+\begin{algorithm}[H]
+\caption{Probabilistic Client Selection}
+\KwIn{\\
+\hspace{2mm} $currentClient$: current position\\
+\hspace{2mm} $visited$: array of visited clients\\
+\hspace{2mm} $D$: distance matrix\\
+\hspace{2mm} $\alpha$: probability weighting parameter}
+\KwOut{Selected next client}
+
+$candidates \leftarrow \emptyset$\;
+$probabilities \leftarrow \emptyset$\;
+$totalInverseProbability \leftarrow 0$\;
+
+\For{$i \leftarrow 1$ \textbf{to} $|D| - 1$}{
+    \If{\textbf{not} $visited[i]$}{
+        Add $i$ to $candidates$\;
+        $inverseProbabilty \leftarrow (1/D[currentClient][i])^{\alpha}$\;
+        Add $inverseProbabilty$ to $probabilities$\;
+        $totalInverseProbability \leftarrow totalInverseProbability + inverseProbabilty$\;
+    }
+}
+
+\If{$candidates = \emptyset$}{
+    \Return $-1$\;
+}
+
+\tcp{Normalize probabilities}
+\For{$i \leftarrow 0$ \textbf{to} $|probabilities| - 1$}{
+    $probabilities[i] \leftarrow probabilities[i] / totalInverseProbability$\;
+}
+
+\Return rouletteWheelSelection($candidates$, $probabilities$)\;
+\end{algorithm}
+
+% ----------- Page 6: Intelligent Insertion -----------
+\newpage
+
+\section{Intelligent Insertion Strategy}
+
+The intelligent insertion method evaluates the best position to insert each unvisited client based on minimum insertion cost.
+
+\begin{algorithm}[H]
+\caption{Intelligent Insertion Selection}
+\KwIn{\\
+\hspace{2mm} $currentRoute$: partially constructed route\\
+\hspace{2mm} $visited$: array of visited clients\\
+\hspace{2mm} $D$: distance matrix\\
+\hspace{2mm} $points$: list of all points}
+\KwOut{Best client to insert}
+
+$bestClient \leftarrow -1$\;
+$bestInsertionCost \leftarrow \infty$\;
+
+\For{$client \leftarrow 1$ \textbf{to} $|visited| - 1$}{
+    \If{\textbf{not} $visited[client]$}{
+        $minInsertionCost \leftarrow$ calculateBestInsertionCost($currentRoute$, $client$, $D$, $points$)\;
+        
+        \If{$minInsertionCost < bestInsertionCost$}{
+            $bestInsertionCost \leftarrow minInsertionCost$\;
+            $bestClient \leftarrow client$\;
+        }
+    }
+}
+
+\Return $bestClient$\;
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Calculate Best Insertion Cost}
+\KwIn{\\
+\hspace{2mm} $route$: current route\\
+\hspace{2mm} $clientIndex$: client to be inserted\\
+\hspace{2mm} $D$: distance matrix\\
+\hspace{2mm} $points$: list of all points}
+\KwOut{Minimum insertion cost}
+
+\If{$route = \emptyset$}{
+    \Return $2 \times D[0][clientIndex]$ \tcp*[r]{round trip from depot}
+}
+
+$minCost \leftarrow \infty$\;
+
+\For{$pos \leftarrow 0$ \textbf{to} $|route|$}{
+    $insertionCost \leftarrow$ calculateInsertionCostAtPosition($route$, $clientIndex$, $pos$, $D$, $points$)\;
+    $minCost \leftarrow \min(minCost, insertionCost)$\;
+}
+
+\Return $minCost$\;
+\end{algorithm}
+
+% ----------- Page 7: 2-Opt Optimization -----------
+\newpage
+
+\section{2-Opt Local Optimization}
+
+The 2-opt algorithm improves individual routes by eliminating crossing edges and optimizing the customer sequence.
+
+\begin{algorithm}[H]
+\caption{2-Opt Route Improvement}
+\KwIn{\\
+\hspace{2mm} $routes$: set of constructed routes\\
+\hspace{2mm} $D$: distance matrix\\
+\hspace{2mm} $points$: list of all points}
+\KwOut{Optimized routes}
+
+$improvedRoutes \leftarrow \emptyset$\;
+
+\For{\textbf{each} $route$ \textbf{in} $routes$}{
+    \If{$|route| \leq 2$}{
+        Add copy of $route$ to $improvedRoutes$\;
+        \textbf{continue}\;
+    }
+    
+    $bestRoute \leftarrow$ copy of $route$\;
+    $improved \leftarrow true$\;
+    
+    \While{$improved$}{
+        $improved \leftarrow false$\;
+        $bestDistance \leftarrow$ calculateRouteDistance($bestRoute$, $D$, $points$)\;
+        
+        \For{$i \leftarrow 0$ \textbf{to} $|bestRoute| - 2$}{
+            \For{$j \leftarrow i + 2$ \textbf{to} $|bestRoute| - 1$}{
+                $newRoute \leftarrow$ perform2OptSwap($bestRoute$, $i$, $j$)\;
+                $newDistance \leftarrow$ calculateRouteDistance($newRoute$, $D$, $points$)\;
+                
+                \If{$newDistance < bestDistance$}{
+                    $bestRoute \leftarrow newRoute$\;
+                    $bestDistance \leftarrow newDistance$\;
+                    $improved \leftarrow true$\;
+                }
+            }
+        }
+    }
+    
+    Add $bestRoute$ to $improvedRoutes$\;
+}
+
+\Return $improvedRoutes$\;
+\end{algorithm}
+
+% ----------- Page 8: Inter-Route Optimization -----------
+\newpage
+
+\section{Inter-Route Exchange Optimization}
+
+The inter-route optimization phase applies various exchange mechanisms between different routes to improve the global solution quality.
+
+\begin{algorithm}[H]
+\caption{Inter-Route Exchange Optimization}
+\KwIn{\\
+\hspace{2mm} $routes$: set of optimized routes\\
+\hspace{2mm} $D$: distance matrix\\
+\hspace{2mm} $points$: list of all points}
+\KwOut{Globally optimized routes}
+
+$improved \leftarrow true$\;
+
+\While{$improved$}{
+    $improved \leftarrow false$\;
+    
+    \For{$i \leftarrow 0$ \textbf{to} $|routes| - 2$}{
+        \For{$j \leftarrow i + 1$ \textbf{to} $|routes| - 1$}{
+            \If{tryRouteExchanges($routes$, $i$, $j$, $D$, $points$)}{
+                $improved \leftarrow true$\;
+            }
+        }
+    }
+}
+
+\Return $routes$\;
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Route Exchange Strategies}
+\KwIn{\\
+\hspace{2mm} $routes$: all routes\\
+\hspace{2mm} $routeIndex1$, $routeIndex2$: indices of routes to exchange\\
+\hspace{2mm} $D$: distance matrix\\
+\hspace{2mm} $points$: list of all points}
+\KwOut{Boolean indicating if improvement was found}
+
+$route1 \leftarrow routes[routeIndex1]$\;
+$route2 \leftarrow routes[routeIndex2]$\;
+$currentDistance \leftarrow$ calculateRouteDistance($route1$, $D$, $points$) + calculateRouteDistance($route2$, $D$, $points$)\;
+
+\tcp{Try different exchange strategies in order}
+\If{try11Exchange($route1$, $route2$, $currentDistance$, $D$, $points$)}{
+    \Return $true$\;
+}
+
+\If{try21Exchange($route1$, $route2$, $currentDistance$, $D$, $points$)}{
+    \Return $true$\;
+}
+
+\If{try12Exchange($route1$, $route2$, $currentDistance$, $D$, $points$)}{
+    \Return $true$\;
+}
+
+\If{try10Exchange($route1$, $route2$, $currentDistance$, $D$, $points$)}{
+    \Return $true$\;
+}
+
+\If{try01Exchange($route1$, $route2$, $currentDistance$, $D$, $points$)}{
+    \Return $true$\;
+}
+
+\Return $false$\;
+\end{algorithm}
+
+% ----------- Page 9: Algorithm Analysis -----------
+\newpage
+
+\section{Algorithm Analysis}
+
+\subsection{Time Complexity}
+The overall time complexity of the hybrid algorithm can be analyzed by examining each phase:
+
+\begin{itemize}
+    \item \textbf{Route Construction:} $O(n^2)$ where $n$ is the number of customers
+    \item \textbf{2-Opt Optimization:} $O(n^2)$ per route, $O(kn^2)$ total where $k$ is the number of routes
+    \item \textbf{Inter-Route Exchanges:} $O(k^2 \cdot m^2)$ where $m$ is the average route size
+    \item \textbf{Overall Complexity:} $O(I \cdot (n^2 + kn^2 + k^2m^2))$ where $I$ is the number of iterations
+\end{itemize}
+
+\subsection{Space Complexity}
+The algorithm maintains:
+\begin{itemize}
+    \item Distance matrix: $O(n^2)$
+    \item Route storage: $O(n)$
+    \item Visited array: $O(n)$
+    \item \textbf{Total Space Complexity:} $O(n^2)$
+\end{itemize}
+
+\subsection{Algorithm Advantages}
+\begin{enumerate}
+    \item \textbf{Hybrid Approach:} Combines exploration (probabilistic) and exploitation (insertion) strategies
+    \item \textbf{Multi-level Optimization:} Applies both intra-route and inter-route improvements
+    \item \textbf{Capacity Constraint Handling:} Efficiently manages vehicle capacity constraints
+    \item \textbf{Scalability:} Can handle problems with varying sizes effectively
+\end{enumerate}
+
+% ----------- Page 10: Conclusion -----------
+\newpage
+
+\section{Conclusion}
+
+This research presents a comprehensive hybrid algorithm for solving the Capacitated Vehicle Routing Problem that effectively combines multiple optimization strategies. The key innovations include:
+
+\begin{itemize}
+    \item A dynamic hybrid construction method that alternates between probabilistic and intelligent insertion strategies
+    \item Comprehensive local optimization using 2-opt improvements
+    \item Extensive inter-route exchange mechanisms including five different exchange types
+    \item Multi-iteration approach with best solution tracking
+\end{itemize}
+
+The algorithm demonstrates significant improvements over traditional single-method approaches by leveraging the strengths of different optimization techniques. The probabilistic component ensures exploration of diverse solutions, while the intelligent insertion method focuses on exploitation of local optimization opportunities.
+
+
+\section*{References}
+
+\begin{enumerate}
+    \item Clarke, G., \& Wright, J. W. (1964). Scheduling of vehicles from a central depot to a number of delivery points. \textit{Operations Research}, 12(4), 568-581.
+    
+    \item Toth, P., \& Vigo, D. (Eds.). (2014). \textit{Vehicle routing: problems, methods, and applications}. Society for Industrial and Applied Mathematics.
+    
+    \item Other sources: ChatGPT, GitHub Repositories and Youtube.
+\end{enumerate}
+
+
+
+
+
+
+\end{document}

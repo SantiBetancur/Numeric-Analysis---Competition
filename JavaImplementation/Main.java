@@ -17,19 +17,19 @@ public class Main {
         DistanceMatrix distanceMatrix = new DistanceMatrix(points.size());
         distanceMatrix.generateDistances(points.toArray(new Point[0]));
         double[][] matrix = distanceMatrix.getMatrix();
-        System.out.println("Matriz de distancias generada.");
+        System.out.println("Matriz de distancias cargada.");
 
         // Resolver usando el algoritmo probabilístico del vecino más cercano
-        Method1 method = new Method1(12345L, 50); // Semilla fija y alpha=2.5
+        Method1 method = new Method1(12345L, 50); // Semilla fija y alpha=50  (Mejor ajuste )
 
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("COMPARACIÓN DE ALGORITMOS");
+        System.out.println("Ejecutando algoritmos, tiempo de ejecución estimado: 95 segundos...");
         System.out.println("=".repeat(60));
 
-        // ===== MÉTODO 1: Algoritmo tradicional (mínimos vehículos) =====
         long startTime1 = System.currentTimeMillis();
-        System.out.println("\n[MÉTODO 1] Ejecutando algoritmo probabilístico (mínimos vehículos)...");
-        List<List<Point>> routesMinimal = method.probabilisticNearestNeighbor(points, start, matrix, 49000, distanceMatrix.getMatrix());
+        // Si el método supera un timeout, detiene la ejecución
+
+        List<List<Point>> routesMinimal = method.solveVRP(points, start, matrix, 13000, distanceMatrix.getMatrix());
 
         long endTime1 = System.currentTimeMillis();
         System.out.println("Tiempo de ejecución: " + (endTime1 - startTime1) + " ms");
